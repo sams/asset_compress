@@ -1,6 +1,7 @@
 <?php
 App::uses('AssetFilter', 'AssetCompress.Lib');
 App::uses('AssetScanner', 'AssetCompress.Lib');
+
 /**
  * Implements directive replacement similar to sprockets <http://getsprockets.org>
  * Does not implement the //= provides syntax.
@@ -16,7 +17,7 @@ class Sprockets extends AssetFilter {
  *
  * @var stgin
  */
-	protected $_pattern = '/^\s*\/\/\=\s+require\s+([\"\<])([^\"\>]+)[\"\>]\n*/m';
+	protected $_pattern = '/^\s?\/\/\=\s+require\s+([\"\<])([^\"\>]+)[\"\>]\n+/m';
 
 /**
  * A list of unique files already processed.
