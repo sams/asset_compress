@@ -9,13 +9,6 @@ App::uses('AssetFilter', 'AssetCompress.Lib');
  * @see http://lesscss.org/
  */
 class LessCss extends AssetFilter {
-	
-	/*
-	
-	setting these in the ini file did not work for me I had to change these to my paths to even get close
-	less does work from comment line but not using this filter node outputs an error
-	
-	*/
 
 	protected $_settings = array(
 		'ext' => '.less',
