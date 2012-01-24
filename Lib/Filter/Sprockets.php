@@ -17,7 +17,8 @@ class Sprockets extends AssetFilter {
  *
  * @var stgin
  */
-	protected $_pattern = '/^\s?\/\/\=\s+require\s+([\"\<])([^\"\>]+)[\"\>]\n+/m';
+	// windows seems to need * in this regex (after the first s and last n)
+	protected $_pattern = '/^\s*\/\/\=\s+require\s+([\"\<])([^\"\>]+)[\"\>]\n*/m';
 
 /**
  * A list of unique files already processed.
