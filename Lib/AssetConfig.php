@@ -30,7 +30,7 @@ class AssetConfig {
 	);
 
 /**
- * Names of normal extensions that Assetcompress could
+ * Names of normal extensions that AssetCompress could
  * handle.
  *
  * @var array
@@ -47,7 +47,7 @@ class AssetConfig {
 	public $constantMap = array(
 		'APP/' => APP,
 		'WEBROOT/' => WWW_ROOT,
-		'ROOT/' => ROOT
+		'ROOT' => ROOT
 	);
 
 	const FILTERS = 'filters';
@@ -204,7 +204,7 @@ class AssetConfig {
 	}
 
 /**
- * Parses paths in an extension definintion
+ * Parses paths in an extension definition
  *
  * @param array $data Array of extension information.
  * @return array Array of build extension information with paths replaced.
