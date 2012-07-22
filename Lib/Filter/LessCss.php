@@ -49,11 +49,11 @@ parser.parse(%s, function (e, tree) {
 		less.writeError(e);
 		process.exit(1)
 	}	
-	util.print(tree.toCSS());	
+	util.print(tree.toCSS());
 	process.exit(0);
 });
 JS;
 		file_put_contents($file, sprintf($text, str_replace('\/*', '', json_encode($this->_settings['paths'])), json_encode($input)));
-
 	}
+
 }

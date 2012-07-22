@@ -36,14 +36,29 @@ class AssetScanner {
 	}
 
 /**
- * Ensure all paths end in a DS and expand any APP/WEBROOT constants
- *
+ * Ensure all paths end in a DS and expand any APP/WEBROOT constants.
+ * Normalizes the Directory Separator as well.
  * @return void
  */
 	protected function _normalizePaths() {
 		foreach ($this->_paths as &$path) {
-			$path = rtrim($path, DS) . DS;
+			$ds = DS;
+			if ($this->isRemote($path)) {
+				$ds = '/';
+			}
+			$path = $this->_normalizePath($path, $ds);
+			$path = rtrim($path, $ds) . $ds;
 		}
+	}
+
+/**
+ * Normalize a file path to the specified Directory Separator ($ds)
+ * @param string $name Path to normalize
+ * @param type $ds Directory Separator to be used
+ * @return string Normalized path
+ */
+	protected function _normalizePath($name, $ds) {
+		return str_replace(array('/', '\\'), $ds, $name);
 	}
 
 /**
@@ -54,7 +69,10 @@ class AssetScanner {
 	protected function _expandPaths() {
 		$expanded = array();
 		foreach ($this->_paths as $path) {
-			if (preg_match('/[*.\[\]]/', $path)) {
+			if ($this->isRemote($path)) {
+				// Remote path. Not expandable!
+				$expanded[] = $path;
+			} elseif (preg_match('/[*.\[\]]/', $path)) {
 				$tree = $this->_generateTree($path);
 				$expanded = array_merge($expanded, $tree);
 			} else {
@@ -72,35 +90,66 @@ class AssetScanner {
  */
 	protected function _generateTree($path) {
 		$paths = glob($path, GLOB_ONLYDIR);
+		if (!$paths) {
+			$paths = array();
+		}
 		array_unshift($paths, dirname($path));
 		return $paths;
 	}
 
 /**
- * Find a file in the connected paths, and read its contents.
+ * Find a file in the connected paths, and check for its existance.
  *
  * @param string $file The file you want to find.
- * @return mixed Either false on a miss, or the contents of the file.
+ * @return mixed Either false on a miss, or the full path of the file.
  */
 	public function find($file) {
 		$changed = false;
-		if ($this->_theme && preg_match(self::THEME_PATTERN, $file)) {
+		$resolved = $this->resolve($file);
+		if ($resolved !== $file) {
 			$changed = true;
-			$file = $this->_resolveTheme($file);
 		}
-		if (preg_match(self::PLUGIN_PATTERN, $file)) {
-			$changed = true;
-			$file = $this->_resolvePlugin($file);
-		}
+		$file = $resolved;
 		if ($changed && file_exists($file)) {
 			return $file;
 		}
 		foreach ($this->_paths as $path) {
-			if (file_exists($path . $file)) {
-				return $path . $file;
+			if ($this->isRemote($path)) {
+				$file = $this->_normalizePath($file, '/');
+				$fullPath = $path . $file;
+				// Opens and closes the remote file, just to
+				// check for its existance. Its contents will be read elsewhere.
+				$handle = @fopen($fullPath, 'rb');
+				if ($handle) {
+					fclose($handle);
+					return $fullPath;
+				}
+			} else {
+				$file = $this->_normalizePath($file, DS);
+				$fullPath = $path . $file;
+				if (file_exists($fullPath)) {
+					return $fullPath;
+				}
 			}
 		}
 		return false;
+	}
+
+/**
+ * Resolve a plugin or theme path into the file path without the search paths.
+ *
+ * @param string $path Path to resolve
+ * @param boolean $full Gives absolute paths
+ * @return string resolved path
+ */
+	public function resolve($path, $full = true) {
+		if (preg_match(self::PLUGIN_PATTERN, $path)) {
+			return $this->_resolvePlugin($path, $full);
+		}
+		if ($this->_theme && preg_match(self::THEME_PATTERN, $path)) {
+			return $this->_resolveTheme($path, $full);
+		}
+		return $path;
 	}
 
 /**
@@ -108,21 +157,25 @@ class AssetScanner {
  * current theme's path.
  *
  * @param string $file The theme file to find.
+ * @param boolean $full Gives absolute paths
  * @return string Full path to theme file.
  */
-	protected function _resolveTheme($file) {
+	protected function _resolveTheme($file, $full = true) {
 		$file = preg_replace(self::THEME_PATTERN, '', $file);
-		return App::themePath($this->_theme) . 'webroot' . DS . $file;
+		if ($full) {
+			return App::themePath($this->_theme) . 'webroot' . DS . $file;
+		}
+		return DS . Inflector::underscore($this->_theme) . DS . $file;
 	}
 
 /**
  * Resolve a plugin file to its full path.
  *
  * @param string $file The theme file to find.
- * @return string Full path to theme file.
+ * @param boolean $full Gives absolute paths
  * @throws RuntimeException when plugins are missing.
  */
-	protected function _resolvePlugin($file) {
+	protected function _resolvePlugin($file, $full = true) {
 		preg_match(self::PLUGIN_PATTERN, $file, $matches);
 		if (empty($matches[1]) || empty($matches[2])) {
 			throw new RuntimeException('Missing required parameters');
@@ -130,8 +183,11 @@ class AssetScanner {
 		if (!CakePlugin::loaded($matches[1])) {
 			throw new RuntimeException($matches[1] . ' is not a loaded plugin.');
 		}
-		$path = CakePlugin::path($matches[1]);
-		return $path . 'webroot' . DS . $matches[2];
+		if ($full) {
+			$path = CakePlugin::path($matches[1]);
+			return $path . 'webroot' . DS . $matches[2];
+		}
+		return DS . Inflector::underscore($matches[1]) . DS . $matches[2];
 	}
 
 /**
@@ -141,6 +197,28 @@ class AssetScanner {
  */
 	public function paths() {
 		return $this->_paths;
+	}
+
+/**
+ * Checks if a string represents a remote file
+ *
+ * @param string $target
+ * @return boolean If $target is a handable remote resource.:
+ */
+	public function isRemote($target) {
+		// Patterns for matching readable remote resources
+		// Make sure that any included pattern will 
+		// be accepted by fopen() as well.
+		$remotePatterns = array(
+			'/^https?:\/\//i'
+		);
+		$matches = array();
+		foreach ($remotePatterns as $pattern) {
+			if (preg_match($pattern, $target, $matches)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 }

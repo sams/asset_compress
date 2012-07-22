@@ -12,7 +12,7 @@ class AssetCompiler {
 
 	protected $_Config;
 
-	function __construct(AssetConfig $config) {
+	public function __construct(AssetConfig $config) {
 		$this->_Config = $config;
 	}
 
@@ -21,6 +21,7 @@ class AssetCompiler {
  *
  * @param string $target The name of the build target to generate.
  * @return The processed result of $target and it dependencies.
+ * @throws RuntimeException
  */
 	public function generate($build) {
 		$ext = $this->_Config->getExt($build);
@@ -34,11 +35,11 @@ class AssetCompiler {
 		}
 		foreach ($files as $file) {
 			$file = $this->_findFile($file);
-			$content = file_get_contents($file);
+			$content = $this->_readFile($file);
 			$content = $this->filters->input($file, $content);
 			$output .= $content;
 		}
-		if (Configure::read('debug') < 2) {
+		if (Configure::read('debug') < 2 || php_sapi_name() == 'cli') {
 			$output = $this->filters->output($build, $output);
 		}
 		return trim($output);
@@ -83,4 +84,25 @@ class AssetCompiler {
 		}
 		return $filename;
 	}
+
+/**
+ * Reads the asset file and returns the contents.
+ *
+ * @param string $file The filename
+ * @return string The contents of $file.
+ */
+	protected function _readFile($file) {
+		$content = '';
+		if ($this->_Scanner->isRemote($file)) {
+			$handle = @fopen($file, 'rb');
+			if ($handle) {
+				$content = stream_get_contents($handle);
+				fclose($handle);
+			}
+		} else {
+			$content = file_get_contents($file);
+		}
+		return $content;
+	}
+
 }

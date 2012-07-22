@@ -1,4 +1,5 @@
 <?php
+App::uses('AssetScanner', 'AssetCompress.Lib');
 App::uses('AssetCache', 'AssetCompress.Lib');
 App::uses('AssetConfig', 'AssetCompress.Lib');
 
@@ -15,6 +16,7 @@ class AssetCompressHelper extends AppHelper {
 	public $helpers = array('Html');
 
 	protected $_Config;
+
 	protected $_AssetCache;
 
 /**
@@ -211,9 +213,9 @@ class AssetCompressHelper extends AppHelper {
  * @return string A string containing asset tags.
  */
 	protected function _genericInclude($files, $ext) {
-		$numArgs = count($files) - 1;
+		$numArgs = count($files);
 		$options = array();
-		if (isset($files[$numArgs]) && is_array($files[$numArgs])) {
+		if (isset($files[$numArgs - 1]) && is_array($files[$numArgs - 1])) {
 			$options = array_pop($files);
 			$numArgs -= 1;
 		}
@@ -273,10 +275,13 @@ class AssetCompressHelper extends AppHelper {
 		if (!$buildFiles) {
 			throw new RuntimeException('Cannot create a stylesheet tag for a build that does not exist.');
 		}
+		$output = '';
 		if (!empty($options['raw'])) {
-			$output = '';
 			unset($options['raw']);
+			$config = $this->config();
+			$scanner = new AssetScanner($config->paths('css'), $this->theme);
 			foreach ($buildFiles as $part) {
+				$part = $scanner->resolve($part, false);
 				$output .= $this->Html->css($part, null, $options);
 			}
 			return $output;
@@ -322,7 +327,10 @@ class AssetCompressHelper extends AppHelper {
 		if (!empty($options['raw'])) {
 			$output = '';
 			unset($options['raw']);
+			$config = $this->config();
+			$scanner = new AssetScanner($config->paths('js'), $this->theme);
 			foreach ($buildFiles as $part) {
+				$part = $scanner->resolve($part, false);
 				$output .= $this->Html->script($part, $options);
 			}
 			return $output;
