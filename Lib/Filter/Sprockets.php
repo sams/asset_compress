@@ -17,7 +17,7 @@ class Sprockets extends AssetFilter {
  *
  * @var stgin
  */
-	protected $_pattern = '/^\s?\/\/\=\s+require\s+([\"\<])([^\"\>]+)[\"\>]\n+/m';
+	protected $_pattern = '/^\s?\/\/\=\s+require\s+([\"\<])([^\"\>]+)[\"\>][\r]\n+/m';
 
 /**
  * A list of unique files already processed.
@@ -49,6 +49,7 @@ class Sprockets extends AssetFilter {
  *
  * @param string $filename
  * @param string $content
+ * @return string $content
  */
 	public function input($filename, $content) {
 		$this->_currentFile = $filename;
@@ -63,6 +64,7 @@ class Sprockets extends AssetFilter {
  * Performs the replacements and inlines dependencies.
  *
  * @param array $matches
+ * @return string $content
  */
 	protected function _replace($matches) {
 		$file = $this->_currentFile;

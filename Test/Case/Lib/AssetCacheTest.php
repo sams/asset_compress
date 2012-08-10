@@ -4,7 +4,7 @@ App::uses('AssetConfig', 'AssetCompress.Lib');
 
 class AssetCacheTest extends CakeTestCase {
 
-	function setUp() {
+	public function setUp() {
 		parent::setUp();
 		AssetConfig::clearBuildTimestamp();
 		$this->_testFiles = App::pluginPath('AssetCompress') . 'Test' . DS . 'test_files' . DS;
@@ -17,16 +17,16 @@ class AssetCacheTest extends CakeTestCase {
 		$this->cache = new AssetCache($this->config);
 	}
 
-	function testWrite() {
+	public function testWrite() {
 		$this->config->set('js.timestamp', false);
 		$result = $this->cache->write('test.js', 'Some content');
 		$this->assertNotEqual($result, false);
 		$contents = file_get_contents(TMP . 'test.js');
-		$this->assertEqual('Some content', $contents);
+		$this->assertEquals('Some content', $contents);
 		unlink(TMP . 'test.js');
 	}
 
-	function testWriteTimestamp() {
+	public function testWriteTimestamp() {
 		$this->assertTrue($this->config->get('js.timestamp'));
 
 		$now = time();
@@ -38,11 +38,11 @@ class AssetCacheTest extends CakeTestCase {
 		unlink(TMP . 'test.v' . $now . '.js');
 	}
 
-	function testIsFreshNoBuild(){
+	public function testIsFreshNoBuild() {
 		$this->assertFalse($this->cache->isFresh('libs.js'));
 	}
 
-	function testIsFreshSuccess() {
+	public function testIsFreshSuccess() {
 		$this->config->set('js.timestamp', false);
 		touch(TMP . '/libs.js');
 
@@ -50,7 +50,7 @@ class AssetCacheTest extends CakeTestCase {
 		unlink(TMP . '/libs.js');
 	}
 
-	function testThemeFileSaving() {
+	public function testThemeFileSaving() {
 		$this->config = AssetConfig::buildFromIniFile($this->_themeConfig);
 		$this->config->theme('blue');
 		$this->config->cachePath('css', TMP);
@@ -58,43 +58,43 @@ class AssetCacheTest extends CakeTestCase {
 
 		$this->cache->write('themed.css', 'theme file.');
 		$contents = file_get_contents(TMP . 'blue-themed.css');
-		$this->assertEqual('theme file.', $contents);
+		$this->assertEquals('theme file.', $contents);
 	}
 
-	function testGetSetTimestamp() {
+	public function testGetSetTimestamp() {
 		$time = time();
 		$this->cache->setTimestamp('libs.js', $time);
 		$result = $this->cache->getTimestamp('libs.js');
-		$this->assertEqual($time, $result);
+		$this->assertEquals($time, $result);
 
 		$result = $this->cache->getTimestamp('foo.bar.js');
-		$this->assertEqual($time, $result);
+		$this->assertEquals($time, $result);
 
 		$this->config->set('js.timestamp', false);
 		$result = $this->cache->getTimestamp('foo.bar.js');
 		$this->assertFalse($result);
 	}
 
-	function testBuildFileNameTheme() {
+	public function testBuildFileNameTheme() {
 		$this->config = AssetConfig::buildFromIniFile($this->_themeConfig);
 		$this->config->theme('blue');
 		$this->config->cachePath('css', TMP);
 		$this->cache = new AssetCache($this->config);
 
 		$result = $this->cache->buildFileName('themed.css');
-		$this->assertEqual('blue-themed.css', $result);
+		$this->assertEquals('blue-themed.css', $result);
 	}
 
-	function testBuildFileNameTimestampNoValue() {
+	public function testBuildFileNameTimestampNoValue() {
 		$this->config->cachePath('js', TMP);
 		$this->cache = new AssetCache($this->config);
 
 		$time = time();
 		$result = $this->cache->buildFileName('libs.js');
-		$this->assertEqual('libs.v' . $time . '.js', $result);
+		$this->assertEquals('libs.v' . $time . '.js', $result);
 	}
 
-	function testTimestampFromCache() {
+	public function testTimestampFromCache() {
 		$this->config->general('cacheConfig', true);
 		$this->config->set('js.timestamp', true);
 
@@ -105,7 +105,7 @@ class AssetCacheTest extends CakeTestCase {
 		unlink(TMP . AssetConfig::BUILD_TIME_FILE);
 
 		$result = $this->cache->buildFilename('libs.js');
-		$this->assertEqual('libs.v' . $time . '.js', $result);
+		$this->assertEquals('libs.v' . $time . '.js', $result);
 	}
 
 }
