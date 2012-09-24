@@ -30,7 +30,7 @@ class AssetConfig {
 	);
 
 /**
- * Names of normal extensions that Assetcompress could
+ * Names of normal extensions that AssetCompress could
  * handle.
  *
  * @var array
@@ -47,7 +47,7 @@ class AssetConfig {
 	public $constantMap = array(
 		'APP/' => APP,
 		'WEBROOT/' => WWW_ROOT,
-		'ROOT/' => ROOT
+		'ROOT' => ROOT
 	);
 
 	const FILTERS = 'filters';
@@ -78,7 +78,7 @@ class AssetConfig {
  * @param array $additionalConstants  Additional constants that will be translated
  *    when parsing paths.
  */
-	public static function buildFromIniFile($iniFile = null, $constants = array()){
+	public static function buildFromIniFile($iniFile = null, $constants = array()) {
 		if (empty($iniFile)) {
 			$iniFile = APP . 'Config' . DS . 'asset_compress.ini';
 		}
@@ -121,7 +121,7 @@ class AssetConfig {
 /**
  * Clear all the cached keys associated with AssetConfig
  */
-	public static function clearAllCachedKeys(){
+	public static function clearAllCachedKeys() {
 		self::clearCachedBuildTime();
 		self::clearCachedAssetConfig();
 	}
@@ -131,6 +131,7 @@ class AssetConfig {
  *
  * @param string $filename Name of the inifile to parse
  * @return array Inifile contents
+ * @throws RuntimeException
  */
 	protected static function _readConfig($filename) {
 		if (empty($filename) || !is_string($filename) || !file_exists($filename)) {
@@ -204,7 +205,7 @@ class AssetConfig {
 	}
 
 /**
- * Parses paths in an extension definintion
+ * Parses paths in an extension definition
  *
  * @param array $data Array of extension information.
  * @return array Array of build extension information with paths replaced.
@@ -212,7 +213,7 @@ class AssetConfig {
 	protected function _parseExtensionDef($target) {
 		$paths = array();
 		if (!empty($target['paths'])) {
-			$paths = array_map(array($this, '_replacePathConstants'), (array) $target['paths']);
+			$paths = array_map(array($this, '_replacePathConstants'), (array)$target['paths']);
 		}
 		$target['paths'] = $paths;
 		if (!empty($target['cachePath'])) {
@@ -229,9 +230,8 @@ class AssetConfig {
  * @return string constants replaced
  */
 	protected function _replacePathConstants($path) {
-        $result = strtr($path, $this->constantMap);
-        $result = str_replace('/', DS, $result);
-        return $result;
+		$result = strtr($path, $this->constantMap);
+		return $result;
 	}
 
 /**
@@ -240,6 +240,7 @@ class AssetConfig {
  *
  * @param string $path The path to set.
  * @param string $value The value to set.
+ * @throws RuntimeException
  */
 	public function set($path, $value) {
 		$parts = explode('.', $path);
@@ -291,9 +292,10 @@ class AssetConfig {
 	public function filters($ext, $target = null, $filters = null) {
 		if ($filters === null) {
 			if (!isset($this->_data[$ext][self::FILTERS])) {
-				return array();
+				$filters = array();
+			} else {
+				$filters = (array)$this->_data[$ext][self::FILTERS];
 			}
-			$filters = (array)$this->_data[$ext][self::FILTERS];
 			if ($target !== null && !empty($this->_data[$ext][self::TARGETS][$target][self::FILTERS])) {
 				$buildFilters = $this->_data[$ext][self::TARGETS][$target][self::FILTERS];
 				$filters = array_merge($filters, $buildFilters);
@@ -372,7 +374,7 @@ class AssetConfig {
 	public function paths($ext, $paths = null) {
 		if ($paths === null) {
 			if (!empty($this->_data[$ext]['paths'])) {
-				return (array) $this->_data[$ext]['paths'];
+				return (array)$this->_data[$ext]['paths'];
 			}
 			return array();
 		}

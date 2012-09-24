@@ -3,7 +3,7 @@ App::uses('Sprockets', 'AssetCompress.Filter');
 
 class SprocketsTest extends CakeTestCase {
 
-	function setUp() {
+	public function setUp() {
 		$this->_pluginPath = App::pluginPath('AssetCompress');
 		$this->_jsDir = $this->_pluginPath . 'Test' . DS . 'test_files' . DS . 'js' . DS;
 
@@ -17,7 +17,7 @@ class SprocketsTest extends CakeTestCase {
 		$this->filter->settings($settings);
 	}
 
-	function testInputSimple() {
+	public function testInputSimple() {
 		$content = file_get_contents($this->_jsDir . 'classes' . DS . 'template.js');
 
 		$result = $this->filter->input('template.js', $content);
@@ -30,10 +30,10 @@ var Template = new Class({
 });
 
 TEXT;
-		$this->assertEqual($result, $expected);
+		$this->assertTextEquals($expected, $result);
 	 }
 
-	function testInputWithRecursion() {
+	public function testInputWithRecursion() {
 		$content = file_get_contents($this->_jsDir . 'classes' . DS . 'nested_class.js');
 		$result = $this->filter->input('nested_class.js', $content);
 		$expected = <<<TEXT
@@ -49,10 +49,10 @@ var NestedClass = BaseClassTwo.extend({
 
 });
 TEXT;
-		$this->assertEqual($result, $expected);
+		$this->assertTextEquals($expected, $result);
 	}
 
-	function testDoubleInclusion() {
+	public function testDoubleInclusion() {
 		$content = file_get_contents($this->_jsDir . 'classes' . DS . 'double_inclusion.js');
 		$result = $this->filter->input('double_inclusion.js', $content);
 		$expected = <<<TEXT
@@ -66,7 +66,7 @@ var DoubleInclusion = new Class({
 
 });
 TEXT;
-		$this->assertEqual($result, $expected);
+		$this->assertTextEquals($expected, $result);
 	}
 
 /**
@@ -75,7 +75,7 @@ TEXT;
  *
  * @return void
  **/
-	function testAngleBracketScanning() {
+	public function testAngleBracketScanning() {
 		$content = file_get_contents($this->_jsDir . 'classes' . DS . 'slideshow.js');
 		$result = $this->filter->input('slideshow.js', $content);
 		$expected = <<<TEXT
@@ -96,7 +96,7 @@ var Slideshow = new Class({
 
 });
 TEXT;
-		$this->assertEqual($result, $expected);
+		$this->assertTextEquals($expected, $result);
 	}
 
 /**
@@ -104,7 +104,7 @@ TEXT;
  * members of the same build will re-include their dependencies if multiple components rely on a single parent.
  *
  */
-	function testInclusionCounterWorksAcrossCalls() {
+	public function testInclusionCounterWorksAcrossCalls() {
 		$content = file_get_contents($this->_jsDir . 'classes' . DS . 'template.js');
 		$result = $this->filter->input('template.js', $content);
 
@@ -124,6 +124,6 @@ var DoubleInclusion = new Class({
 
 });
 TEXT;
-		$this->assertEqual($result, $expected);
+		$this->assertTextEquals($expected, $result);
 	}
 }

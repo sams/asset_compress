@@ -1,6 +1,6 @@
 # Asset Compress
 
-Asset Compress is CakePHP plugin for helping reduce the number of requests, and optimizing the remaining reqests your application makes for Javascript and CSS files.
+Asset Compress is CakePHP plugin for helping reduce the number of requests, and optimizing the remaining requests your application makes for Javascript and CSS files.
 
 ### Features
 
@@ -20,9 +20,10 @@ Clone or download the plugin into one of your plugin paths. Then make
 sure you load the plugin:
 
 	// in app/Config/bootstrap.php
-	CakePlugin::load('AssetCompress');
+	CakePlugin::load('AssetCompress', array('bootstrap' => true));
 
-From there read the [wiki](http://github.com/markstory/asset_compress/wiki) for more information.
+Copy the `Config/asset_compress.sample.ini` to `App/Config/asset_compress.ini`. From there
+read the [wiki](http://github.com/markstory/asset_compress/wiki) for more information.
 
 ## Documentation
 
@@ -38,31 +39,31 @@ Asset Compress is offered under an [MIT license](http://www.opensource.org/licen
 
 ## Copyright
 
-2010-2011 Mark Story (http://mark-story.com)
+2010-2012 Mark Story (http://mark-story.com)
 
 ### Authors
 
-* Mark Story
-* Ben McClure
-* Igor Fomin (evilbloodydemon)
-* Rachman Chavik
-* Sumit Madan
-* Florian Krämer
-* Frank de Graaf (Phally)
-* Alan Bount
-* Abbas Ali
-* Jeremy Harris
-* rynop
-* Cauan Cabral
-* Renan Gonçalves
-* Dave Baker
-
+See the [github contributors list](https://github.com/markstory/asset_compress/graphs/contributors)
 
 ### Changelog
 
+#### 0.7
+
+*Backwards Incompatible Changes:*
+
+*  AssetCompress requires at least CakePHP 2.2.0.  As of 0.7 the controller has been replaced
+   by a dispatcher filter, which requires CakePHP 2.2.0.
+
+*Other changes:*
+
+* Import paths are now set for the less filter.
+* `ROOT/` no longer needs // to work correctly.
+* `paths[]` can now contain remote URL's allowing you to create build files
+  using assets on CDN's or other remote hosts.
+
 #### 0.6
 
-*Backwards Incompatibile Changes:*
+*Backwards Incompatible Changes:*
 
 * `baseUrl` now only takes effect when debug = 0.  Build file existence
   is not checked anymore.  It is assumed that build files exist at

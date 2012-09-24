@@ -10,6 +10,7 @@ App::uses('AssetFilter', 'AssetCompress.Lib');
  * @package asset_compress
  */
 class CssMinFilter extends AssetFilter {
+
 /**
  * Where CssMin can be found.
  *
@@ -28,6 +29,10 @@ class CssMinFilter extends AssetFilter {
  */
 	public function output($filename, $content) {
 		App::import('Vendor', 'cssmin', array('file' => $this->_settings['path']));
+		if (!class_exists('CssMin')) {
+			throw new Exception(sprintf('Cannot not load filter class "%s".', 'CssMin'));
+		}
 		return CssMin::minify($content);
 	}
+
 }

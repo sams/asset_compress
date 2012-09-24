@@ -25,7 +25,7 @@ class TimestampImage extends AssetFilter {
  */
 	protected $_backgroundImagePattern = '/^(?<prop>.*background-image\s*\:\s*url\([\'"]?)(?<path>[^\'")]+?(?:png|gif|jpg))(?<trail>[\'"]?\))/m';
 
-	protected $filename;
+	protected $_filename;
 
 /**
  * Input filter.  Locates CSS background images relative to the 
@@ -33,7 +33,7 @@ class TimestampImage extends AssetFilter {
  *
  * @param string $filename The file being processed
  * @param string $content The file content
- * @return The content with images timestampped.
+ * @return The content with images timestamped.
  */
 	public function input($filename, $content) {
 		$this->_filename = $filename;
@@ -72,7 +72,7 @@ class TimestampImage extends AssetFilter {
  * querystrings, as they could have anything in them or be customized 
  * already.
  *
- * @param string $filepath The absolute path to the file for timestampping
+ * @param string $filepath The absolute path to the file for timestamping
  * @param string $path The path to append a timestamp to.
  * @return string Path with a timestamp.
  */

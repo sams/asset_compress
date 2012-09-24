@@ -20,6 +20,7 @@ class AssetCache {
  *
  * @param string $filename The filename to write.
  * @param string $contents The contents to write.
+ * @throws RuntimeException
  */
 	public function write($filename, $content) {
 		$ext = $this->_Config->getExt($filename);
@@ -57,14 +58,52 @@ class AssetCache {
 
 		foreach ($files as $file) {
 			$path = $Scanner->find($file);
-			$time = filemtime($path);
-			if ($time >= $buildTime) {
+			if ($Scanner->isRemote($path)) {
+				$time = $this->getRemoteFileLastModified($path);
+			} else {
+				$time = filemtime($path);
+			}
+			if ($time === false  ||  $time >= $buildTime) {
 				return false;
 			}
 		}
 		return true;
 	}
+	
+	/**
+	 * Gets the modification time of a remote $url.
+	 * Based on: http://www.php.net/manual/en/function.filemtime.php#81194
+	 * @param type $url
+	 * @return The last modified time of the $url file, in Unix timestamp, or false it can't be read.
+	 */
+	public function getRemoteFileLastModified($url) {
+		// default
+		$unixtime = 0;
 
+		$fp = @fopen($url, 'rb');
+		if (!$fp) {
+			return false;
+		}
+
+		$metadata = stream_get_meta_data($fp);
+		foreach ($metadata['wrapper_data'] as $response) {
+			// case: redirection
+			if (substr(strtolower($response), 0, 10) == 'location: ') {
+				$newUri = substr($response, 10);
+				fclose($fp);
+				return $this->getRemoteFileLastModified($newUri);
+			}
+			// case: last-modified
+			elseif (substr(strtolower($response), 0, 15) == 'last-modified: ') {
+				$unixtime = strtotime(substr($response, 15));
+				break;
+			}
+		}
+		
+		fclose($fp);
+		return $unixtime;
+	}
+	
 /**
  * Set the timestamp for a build file.
  *
@@ -93,7 +132,7 @@ class AssetCache {
  * Will either read the cached version, or the on disk version. If
  * no timestamp is found for a file, a new time will be generated and saved.
  *
- * If timestamps are disabled, false will be returrned.
+ * If timestamps are disabled, false will be returned.
  *
  * @param string $build The build to get a timestamp for.
  * @return mixed The last build time, or false.
@@ -122,7 +161,7 @@ class AssetCache {
 		$data = array();
 		$cachedConfig = $this->_Config->general('cacheConfig');
 		if ($cachedConfig) {
-			$data =  Cache::read(AssetConfig::CACHE_BUILD_TIME_KEY, AssetConfig::CACHE_CONFIG);
+			$data = Cache::read(AssetConfig::CACHE_BUILD_TIME_KEY, AssetConfig::CACHE_CONFIG);
 		}
 		if (empty($data) && file_exists(TMP . AssetConfig::BUILD_TIME_FILE)) {
 			$data = file_get_contents(TMP . AssetConfig::BUILD_TIME_FILE);
