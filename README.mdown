@@ -20,7 +20,7 @@ Clone or download the plugin into one of your plugin paths. Then make
 sure you load the plugin:
 
 	// in app/Config/bootstrap.php
-	CakePlugin::load('AssetCompress');
+	CakePlugin::load('AssetCompress', array('bootstrap' => true));
 
 Copy the `Config/asset_compress.sample.ini` to `App/Config/asset_compress.ini`. From there
 read the [wiki](http://github.com/markstory/asset_compress/wiki) for more information.
@@ -48,6 +48,11 @@ See the [github contributors list](https://github.com/markstory/asset_compress/g
 ### Changelog
 
 #### 0.7
+
+*Backwards Incompatible Changes:*
+
+*  AssetCompress requires at least CakePHP 2.2.0.  As of 0.7 the controller has been replaced
+   by a dispatcher filter, which requires CakePHP 2.2.0.
 
 *Other changes:*
 

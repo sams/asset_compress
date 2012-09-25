@@ -30,12 +30,7 @@ class AssetCompressHelper extends AppHelper {
  * @var array
  */
 	public $options = array(
-		'autoIncludePath' => 'views',
-		'buildUrl' => array(
-			'plugin' => 'asset_compress',
-			'controller' => 'assets',
-			'action' => 'get'
-		),
+		'autoIncludePath' => 'views'
 	);
 
 /**
@@ -134,7 +129,7 @@ class AssetCompressHelper extends AppHelper {
 		foreach ($files as $file) {
 			$includeFile = JS . $this->options['autoIncludePath'] . DS . $file;
 			if (file_exists($includeFile)) {
-				$this->Html->script($this->options['autoIncludePath'] . '/' . $file, array('inline' => false));
+				$this->Html->script(str_replace(DS, '/', $this->options['autoIncludePath'] . '/' . $file), array('inline' => false));
 			}
 		}
 	}
@@ -289,20 +284,8 @@ class AssetCompressHelper extends AppHelper {
 			return $output;
 		}
 
-		$baseUrl = $this->_Config->get('css.baseUrl');
-		if ($baseUrl && !Configure::read('debug')) {
-			$route = $baseUrl . $this->_getBuildName($file);
-		} elseif ($this->useDynamicBuild($file)) {
-			$route = $this->_getRoute($file);
-		} else {
-			$route = $this->_locateBuild($file);
-		}
-
-		if (DS == '\\') {
-			$route = str_replace(DS, '/', $route);
-		}
-
-		return $this->Html->css($route, null, $options);
+		$url = $this->_getAssetUrl('css', $file);
+		return $this->Html->css($url, null, $options);
 	}
 
 /**
@@ -337,46 +320,51 @@ class AssetCompressHelper extends AppHelper {
 			}
 			return $output;
 		}
-		$baseUrl = $this->_Config->get('js.baseUrl');
-		if ($baseUrl && !Configure::read('debug')) {
+
+		$url = $this->_getAssetUrl('js', $file);
+		return $this->Html->script($url, $options);
+	}
+
+/**
+ * Get the url for an asset based on the type and file.
+ *
+ * @param string $type The type of file. (css/js)
+ * @param string $file The build filename.
+ */
+	protected function _getAssetUrl($type, $file) {
+		$baseUrl = $this->_Config->get($type . '.baseUrl');
+		$path = $this->_Config->get($type . '.cachePath');
+		$devMode = Configure::read('debug') > 0;
+
+		$route = null;
+		if ($baseUrl && !$devMode) {
 			$route = $baseUrl . $this->_getBuildName($file);
-		} elseif ($this->useDynamicBuild($file)) {
-			$route = $this->_getRoute($file);
-		} else {
-			$route = $this->_locateBuild($file);
+		}
+		if (empty($route) && !$devMode) {
+			$path = str_replace(WWW_ROOT, '/', $path);
+			$path = rtrim($path, '/') . '/';
+			$route = $path . $this->_getBuildName($file);
+		}
+		if ($devMode) {
+			$baseUrl = str_replace(WWW_ROOT, '/', $path);
+			$route = $this->_getRoute($file, $baseUrl);
 		}
 
 		if (DS == '\\') {
 			$route = str_replace(DS, '/', $route);
 		}
-
-		return $this->Html->script($route, $options);
+		return $route;
 	}
 
 /**
- * Check if caching is on. If caching is off, then dynamic builds
- * (pointing at the controller) will be generated.
- *
- * If caching is on for this extension, the helper will try to locate build
- * files using the cachePath. If no cache file exists a dynamic build will be done.
- */
-	public function useDynamicBuild($file) {
-		$ext = $this->_Config->getExt($file);
-		if (!$this->_Config->cachePath($ext)) {
-			return true;
-		}
-		if ($this->_locateBuild($file)) {
-			return false;
-		}
-		return true;
-	}
-
-/**
- * Get the build file name.
- *
- * @param string $build The build being resolved.
- * @return string The resolved build name.
- */
+* Get the build file name.
+*
+* Generates filenames that are intended for production use
+* with statically generated files.
+*
+* @param string $build The build being resolved.
+* @return string The resolved build name.
+*/
 	protected function _getBuildName($build) {
 		$ext = $this->_Config->getExt($build);
 		$hash = $this->_getHashName($build, $ext);
@@ -388,55 +376,35 @@ class AssetCompressHelper extends AppHelper {
 	}
 
 /**
- * Locates a build file and returns the url path to it.
- *
- * @param string $build Filename of the build to locate.
- * @return string The url path to the built asset.
- */
-	protected function _locateBuild($build) {
-		$ext = $this->_Config->getExt($build);
-		$path = $this->_Config->cachePath($ext);
-		if (!$path) {
-			return false;
-		}
-		$build = $this->_getBuildName($build);
-		if (file_exists($path . $build)) {
-			return str_replace(WWW_ROOT, '/', $path . $build);
-		}
-	}
-
-/**
  * Get the dynamic build path for an asset.
+ *
+ * This generates URLs that work with the development dispatcher filter.
+ *
+ * @param string $file The build file you want to make a url for.
+ * @param string $base The base path to fetch a url with.
+ * @return string Generated URL.
  */
-	protected function _getRoute($file) {
-		$url = $this->options['buildUrl'];
-
-		//escape out of prefixes.
-		$prefixes = Router::prefixes();
-		foreach ($prefixes as $prefix) {
-			if (!array_key_exists($prefix, $url)) {
-				$url[$prefix] = false;
-			}
-		}
-		$params = array(
-			$file,
-			'base' => false
-		);
+	protected function _getRoute($file, $base) {
 		$ext = $this->_Config->getExt($file);
+		$query = array();
+
+		if ($this->_Config->isThemed($file)) {
+			$query['theme'] = $this->theme;
+		}
+
 		if (isset($this->_runtime[$ext][$file])) {
 			$hash = $this->_getHashName($file, $ext);
 			$components = $this->_Config->files($file);
 			if ($hash) {
-				$params[0] = $hash;
+				$file = $hash;
 			}
-			$params['?'] = array('file' => $components);
+			$query['file'] = $components;
 		}
-		if ($this->_Config->isThemed($file)) {
-			$params['?']['theme'] = $this->theme;
+		if (substr($base, -1) !== DS) {
+			$base .= '/';
 		}
-
-		$url = Router::url(array_merge($url, $params));
-		return $url;
+		$query = empty($query) ? '' : '?' . http_build_query($query);
+		return $base . $file . $query;
 	}
 
 /**
