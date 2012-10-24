@@ -35,9 +35,9 @@ class TimestampImageTest extends CakeTestCase {
 
 TEXT;
 		$result = preg_replace('/(t\=)([0-9]+)/', '$1[TIMESTAMP]', $result);
+echo "expected<br><pre>\n$expected\n</pre>";
+echo "result<br><pre>\n$result\n</pre>";
 		$this->assertEquals($expected, $result);
 	}
 
 }
-
-

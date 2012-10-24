@@ -38,6 +38,8 @@ var Template = new Class({
 
 });
 TEXT;
+echo "expected<br><pre>\n$expected\n</pre>";
+echo "result<br><pre>\n$result\n</pre>";
 		$this->assertEquals($expected, $result);
 	}
 
@@ -54,6 +56,8 @@ TEXT;
 	width:100%;
 }
 TEXT;
+echo "expected<br><pre>\n$expected\n</pre>";
+echo "result<br><pre>\n$result\n</pre>";
 		$this->assertEquals($expected, $result);
 	}
 
@@ -69,6 +73,8 @@ TEXT;
 	width:100%;
 }
 TEXT;
+echo "expected<br><pre>\n$expected\n</pre>";
+echo "result<br><pre>\n$result\n</pre>";
 		$this->assertEquals($expected, $result);
 	}
 
@@ -89,6 +95,8 @@ body {
 	color: blue !important;
 }
 TEXT;
+echo "expected<br><pre>\n$expected\n</pre>";
+echo "result<br><pre>\n$result\n</pre>";
 		$this->assertEquals($expected, $result);
 	}
 
@@ -112,6 +120,8 @@ TEXT;
 	color: red !important;
 }
 TEXT;
+echo "expected<br><pre>\n$expected\n</pre>";
+echo "result<br><pre>\n$result\n</pre>";
 		$this->assertEquals($expected, $result);
 	}
 
@@ -136,6 +146,8 @@ TEXT;
 	color: orange;
 }
 TEXT;
+echo "expected<br><pre>\n$expected\n</pre>";
+echo "result<br><pre>\n$result\n</pre>";
 		$this->assertEquals($expected, $result);
 	}
 

@@ -27,6 +27,8 @@ class ImportInlineTest extends CakeTestCase {
 	width:100%;
 }
 TEXT;
+echo "expected<br><pre>\n$expected\n</pre>";
+echo "result<br><pre>\n$result\n</pre>";
 		$this->assertEquals($expected, $result);
 	}
 
@@ -46,6 +48,8 @@ body {
 	background:#000;
 }
 TEXT;
+echo "expected<br><pre>\n$expected\n</pre>";
+echo "result<br><pre>\n$result\n</pre>";
 		$this->assertEquals($expected, $result);
 	}
 }
