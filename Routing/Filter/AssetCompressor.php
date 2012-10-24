@@ -11,14 +11,14 @@ class AssetCompressor extends DispatcherFilter {
  * Filter priority, we need it to run before router
  *
  * @var int
- **/
+ */
 	public $priority = 9;
 
 /**
  * Object containing configuration settings for asset compressor
  *
  * @var AssetConfig
- **/
+ */
 	protected $_Config;
 
 /**
@@ -59,6 +59,7 @@ class AssetCompressor extends DispatcherFilter {
 			$mtime = $Compiler->getLastModified($build);
 			$event->data['response']->modified($mtime);
 			if ($event->data['response']->checkNotModified($event->data['request'])) {
+				$event->stopPropagation();
 				return $event->data['response'];
 			}
 			$contents = $Compiler->generate($build);
@@ -77,7 +78,7 @@ class AssetCompressor extends DispatcherFilter {
  *
  * @return boolean|string false if no build can be parsed from URL
  * with url path otherwise
- **/
+ */
 	protected function _getBuild($url) {
 		$parts = explode('.', $url, 2);
 		if (count($parts) < 2) {
@@ -97,7 +98,7 @@ class AssetCompressor extends DispatcherFilter {
 	}
 
 /**
- * Config setter, used for testing the controller.
+ * Config setter, used for testing the filter.
  */
 	protected function _getConfig() {
 		if (empty($this->_Config)) {
